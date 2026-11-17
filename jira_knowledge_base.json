@@ -22,17 +22,5 @@
       "needs_similar_case_inv": false
     },
     "note": "単純な表示崩れ・誤字のため追加調査不要。"
-  },
-  {
-    "key": "PROJ-205",
-    "component": "帳票出力モジュール (Report)",
-    "severity": "Minor",
-    "summary": "請求書PDFの消費税端数処理が一部の取引先で1円ずれる",
-    "description": "外貨建て取引の請求書PDF出力時のみ、切り捨てではなく四捨五入になっている。",
-    "labels": {
-      "needs_same_case_inv": true,
-      "needs_similar_case_inv": true
-    },
-    "note": "外部システムからの担当者フィードバック結果"
   }
 ]

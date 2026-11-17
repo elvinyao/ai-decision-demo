@@ -215,10 +215,6 @@ HTML_PAGE = """<!DOCTYPE html>
       font-size: 15px;
       font-weight: 600;
     }
-    .panel-sub {
-      font-size: 12px;
-      color: var(--muted);
-    }
     .kb-list { display: flex; flex-direction: column; gap: 10px; }
     .kb-card {
       border: 1px solid var(--border);
@@ -399,32 +395,27 @@ HTML_PAGE = """<!DOCTYPE html>
 <body>
   <header class="topbar">
     <div class="brand">
-      <h1>Gemini Decision 1 · Jira 智能判定与反馈闭环</h1>
-      <span id="engine-status" class="status-pill status-mock">Mock 本地模拟推理</span>
+      <h1>Gemini Decision 1 · Jira 判定</h1>
+      <span id="engine-status" class="status-pill status-mock">Mock</span>
     </div>
     <div class="key-box">
-      <label for="api-key-input">GEMINI_API_KEY (可选):</label>
-      <input id="api-key-input" type="password" placeholder="留空则使用本地模拟，或自动读取环境变量" />
+      <input id="api-key-input" type="password" placeholder="GEMINI_API_KEY" />
     </div>
   </header>
 
   <div class="demo-bar">
-    <span class="demo-label">闭环演练流程：</span>
-    <button class="step-btn" id="step-1-btn" onclick="runStep1()">① 初次判定 PROJ-205 (帳票1円ずれ)</button>
-    <button class="step-btn" id="step-2-btn" onclick="runStep2()">② 注入人工反馈 (同件:不要 / 類似:要)</button>
-    <button class="step-btn" id="step-3-btn" onclick="runStep3()">③ 判定类似新票 PROJ-310 (验证秒级生效)</button>
-    <button class="ghost" onclick="resetKB()">↺ 重置知识库</button>
+    <button class="step-btn" id="step-1-btn" onclick="runStep1()">① 判定 PROJ-205</button>
+    <button class="step-btn" id="step-2-btn" onclick="runStep2()">② 注入人工反馈</button>
+    <button class="step-btn" id="step-3-btn" onclick="runStep3()">③ 判定 PROJ-310</button>
+    <button class="ghost" onclick="resetKB()">↺ 重置</button>
   </div>
 
   <main class="container">
     <!-- Column 1: Knowledge Base -->
     <section class="panel">
       <div class="panel-header">
-        <div>
-          <h2 class="panel-title">1. 历史 Jira 判例库</h2>
-          <div class="panel-sub">jira_knowledge_base.json · 动态 Few-Shot 检索源</div>
-        </div>
-        <span class="meta-tag" id="kb-count">0 条判例</span>
+        <h2 class="panel-title">历史判例库</h2>
+        <span class="meta-tag" id="kb-count">0</span>
       </div>
       <div id="kb-list" class="kb-list"></div>
     </section>
@@ -432,21 +423,18 @@ HTML_PAGE = """<!DOCTYPE html>
     <!-- Column 2: Ticket Input -->
     <section class="panel">
       <div class="panel-header">
-        <div>
-          <h2 class="panel-title">2. 待判定 Jira 工单</h2>
-          <div class="panel-sub">模拟外部系统传入的新票据</div>
-        </div>
+        <h2 class="panel-title">待判定工单</h2>
       </div>
 
       <div class="preset-row">
-        <button class="preset-btn" onclick="fillPreset('PROJ-205')">填入 PROJ-205 (帳票消費税)</button>
-        <button class="preset-btn" onclick="fillPreset('PROJ-310')">填入 PROJ-310 (納品書割引)</button>
-        <button class="preset-btn" onclick="fillPreset('PROJ-402')">填入 PROJ-402 (PayPay二重決済)</button>
+        <button class="preset-btn" onclick="fillPreset('PROJ-205')">PROJ-205</button>
+        <button class="preset-btn" onclick="fillPreset('PROJ-310')">PROJ-310</button>
+        <button class="preset-btn" onclick="fillPreset('PROJ-402')">PROJ-402</button>
       </div>
 
       <div class="form-row">
         <div class="form-group">
-          <label for="t-key">Ticket Key</label>
+          <label for="t-key">Key</label>
           <input id="t-key" type="text" />
         </div>
         <div class="form-group">
@@ -460,57 +448,51 @@ HTML_PAGE = """<!DOCTYPE html>
       </div>
 
       <div class="form-group">
-        <label for="t-component">Component (模块)</label>
+        <label for="t-component">Component</label>
         <input id="t-component" type="text" />
       </div>
 
       <div class="form-group">
-        <label for="t-summary">Summary (摘要)</label>
+        <label for="t-summary">Summary</label>
         <input id="t-summary" type="text" />
       </div>
 
       <div class="form-group">
-        <label for="t-description">Description (详细描述)</label>
+        <label for="t-description">Description</label>
         <textarea id="t-description"></textarea>
       </div>
 
-      <button id="eval-btn" class="primary" style="width: 100%" onclick="evaluateCurrent()">执行 AI 判定</button>
+      <button id="eval-btn" class="primary" style="width: 100%" onclick="evaluateCurrent()">执行判定</button>
       <div id="eval-toast" class="toast"></div>
     </section>
 
     <!-- Column 3: Evaluation Result & Feedback Loop -->
     <section class="panel">
       <div class="panel-header">
-        <div>
-          <h2 class="panel-title">3. 判定结果与人工反馈闭环</h2>
-          <div class="panel-sub">一次调用返回：同件調査 + 類似調査 + 担当チーム</div>
-        </div>
-        <span id="result-mode-tag" class="meta-tag">等待判定</span>
+        <h2 class="panel-title">判定结果</h2>
+        <span id="result-mode-tag" class="meta-tag"></span>
       </div>
 
       <div id="result-area">
-        <div class="empty-state">
-          点击上方「① 初次判定 PROJ-205」或左侧「执行 AI 判定」开始演示。
-        </div>
+        <div class="empty-state">暂无判定结果</div>
       </div>
 
       <div class="feedback-box">
-        <div class="panel-title" style="font-size: 14px; margin-bottom: 8px;">人工审核 / 纠错反馈写入</div>
+        <div class="panel-title" style="font-size: 14px; margin-bottom: 8px;">人工反馈</div>
         <div class="toggle-grid">
           <label class="toggle-card">
-            <span>同件調査 (Same Case)</span>
+            <span>同件調査</span>
             <input id="fb-same" type="checkbox" />
           </label>
           <label class="toggle-card">
-            <span>類似調査 (Similar Case)</span>
+            <span>類似調査</span>
             <input id="fb-similar" type="checkbox" checked />
           </label>
         </div>
         <div class="form-group">
-          <label for="fb-reason">判定理由 / 社内ルールメモ</label>
-          <textarea id="fb-reason" style="min-height: 60px;" placeholder="例如：帳票PDFは都度生成のためDB同件調査は不要だが、類似調査のみ必須..."></textarea>
+          <textarea id="fb-reason" style="min-height: 60px;" placeholder="备注（可选）"></textarea>
         </div>
-        <button id="fb-btn" style="width: 100%" onclick="submitFeedback()">提交人工反馈至知识库</button>
+        <button id="fb-btn" style="width: 100%" onclick="submitFeedback()">写入知识库</button>
         <div id="fb-toast" class="toast"></div>
       </div>
     </section>
@@ -559,7 +541,7 @@ HTML_PAGE = """<!DOCTYPE html>
       const userKey = document.getElementById("api-key-input").value.trim();
       const live = activeMode ? activeMode === "gemini-decision-1" : (hasEnvKey || Boolean(userKey));
       pill.className = "status-pill " + (live ? "status-live" : "status-mock");
-      pill.textContent = live ? "Gemini Decision 1 实时 API" : "Mock 本地模拟推理";
+      pill.textContent = live ? "Gemini Decision 1" : "Mock";
     }
 
     document.getElementById("api-key-input").addEventListener("input", () => updateEnginePill());
@@ -602,7 +584,7 @@ HTML_PAGE = """<!DOCTYPE html>
     }
 
     function renderKB(records) {
-      document.getElementById("kb-count").textContent = `${records.length} 条判例`;
+      document.getElementById("kb-count").textContent = `${records.length}`;
       const list = document.getElementById("kb-list");
       list.innerHTML = records.map((r) => {
         const same = r.labels?.needs_same_case_inv;
@@ -677,11 +659,11 @@ HTML_PAGE = """<!DOCTYPE html>
       `).join("");
 
       document.getElementById("result-area").innerHTML = `
-        ${renderNoulCard("同件調査 (needs_same_case_inv)", res.same_case_investigation)}
-        ${renderNoulCard("類似調査 (needs_similar_case_inv)", res.similar_case_investigation)}
+        ${renderNoulCard("同件調査", res.same_case_investigation)}
+        ${renderNoulCard("類似調査", res.similar_case_investigation)}
         <div class="result-card">
           <div class="result-head">
-            <span class="result-title">担当チーム振り分け (assigned_team)</span>
+            <span class="result-title">担当チーム</span>
             <span class="badge badge-team">${esc(res.routing.top_team)}</span>
           </div>
           <div class="metric-row">
@@ -694,8 +676,7 @@ HTML_PAGE = """<!DOCTYPE html>
         </div>
         <div class="result-card">
           <div class="result-head" style="margin-bottom: 4px;">
-            <span class="result-title">命中相似判例 (Few-Shot 参考)</span>
-            <span class="meta-tag">Top ${res.referenced_cases.length}</span>
+            <span class="result-title">参考判例</span>
           </div>
           <div class="ref-list">${refsHtml}</div>
         </div>
@@ -729,7 +710,7 @@ HTML_PAGE = """<!DOCTYPE html>
         showToast("eval-toast", err.message, true);
       } finally {
         btn.disabled = false;
-        btn.textContent = "执行 AI 判定";
+        btn.textContent = "执行判定";
       }
     }
 
@@ -790,9 +771,9 @@ HTML_PAGE = """<!DOCTYPE html>
       const resp = await fetch("/api/v1/jira/reset", { method: "POST" });
       const data = await resp.json();
       renderKB(data.records);
-      document.getElementById("result-mode-tag").textContent = "等待判定";
+      document.getElementById("result-mode-tag").textContent = "";
       document.getElementById("result-area").innerHTML = `
-        <div class="empty-state">知识库已重置为初始状态（PROJ-101 / PROJ-102）。点击「① 初次判定 PROJ-205」重新演练。</div>
+        <div class="empty-state">暂无判定结果</div>
       `;
       fillPreset("PROJ-205");
     }
