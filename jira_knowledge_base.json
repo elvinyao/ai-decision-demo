@@ -1,0 +1,26 @@
+[
+  {
+    "key": "PROJ-101",
+    "component": "決済モジュール (Payment)",
+    "severity": "Critical",
+    "summary": "クレジットカード決済時にタイムアウトで二重課金が発生",
+    "description": "特定の時間帯にAPIゲートウェイが504を返し、リトライ処理で二重決済になる。",
+    "labels": {
+      "needs_same_case_inv": true,
+      "needs_similar_case_inv": true
+    },
+    "note": "金銭影響があるため、過去ログの同件洗い出しと他決済手段の水平展開調査が必須。"
+  },
+  {
+    "key": "PROJ-102",
+    "component": "管理画面UI (Frontend)",
+    "severity": "Minor",
+    "summary": "ユーザー一覧画面のCSV出力ボタンの文言タイポ",
+    "description": "「ダウンロード」が「ダウンロド」になっている。",
+    "labels": {
+      "needs_same_case_inv": false,
+      "needs_similar_case_inv": false
+    },
+    "note": "単純な表示崩れ・誤字のため追加調査不要。"
+  }
+]
