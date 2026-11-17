@@ -1,4 +1,3 @@
-import os
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
@@ -34,7 +33,7 @@ class FeedbackRequest(BaseModel):
 def get_kb() -> dict:
     return {
         "records": kb._load(),
-        "has_env_key": bool((os.environ.get("GEMINI_API_KEY") or "").strip()),
+        "has_env_key": engine.has_configured_key(),
     }
 
 

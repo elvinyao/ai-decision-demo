@@ -11,6 +11,7 @@ from google import genai
 # 实际生产中可以替换为 PostgreSQL (pgvector) / ChromaDB / Elasticsearch
 # =====================================================================
 DB_FILE = Path(__file__).parent / "jira_knowledge_base.json"
+ENV_FILE = Path(__file__).parent / ".env"
 
 INITIAL_TRAINING_DATA: list[dict[str, Any]] = [
     {
@@ -155,14 +156,33 @@ def _infer_team_mock(ticket: dict[str, Any]) -> str:
     return "other"
 
 
+def _read_dotenv_key() -> str | None:
+    if not ENV_FILE.exists():
+        return None
+    for raw_line in ENV_FILE.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        k, v = line.split("=", 1)
+        if k.strip().removeprefix("export ").strip() == "GEMINI_API_KEY":
+            val = v.strip().strip('"').strip("'").strip()
+            return val if val and val != "你的_GEMINI_API_KEY" else None
+    return None
+
+
 class JiraDecisionEngine:
     def __init__(self, kb: JiraKnowledgeBase, api_key: str | None = None):
         self.kb = kb
         self.api_key = api_key.strip() if api_key else None
 
     def _resolve_api_key(self, override_key: str | None = None) -> str | None:
-        key = override_key if override_key is not None else (self.api_key or os.environ.get("GEMINI_API_KEY"))
-        return key.strip() if key and key.strip() else None
+        for candidate in (override_key, self.api_key, os.environ.get("GEMINI_API_KEY"), _read_dotenv_key()):
+            if candidate and candidate.strip():
+                return candidate.strip()
+        return None
+
+    def has_configured_key(self) -> bool:
+        return bool(self._resolve_api_key())
 
     def _evaluate_mock(
         self,
